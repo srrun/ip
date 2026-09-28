@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tjo, IP-adress och Plats</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 340px;
+        }
+        h2 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+        p {
+            font-size: 1em;
+            color: #555;
+            margin: 8px 0;
+        }
+        span {
+            font-weight: bold;
+            color: #007bff;
+        }
+        #map {
+            height: 200px;
+            width: 100%;
+            margin-top: 15px;
+            border-radius: 6px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h2>Din Information</h2>
+        <p>IP-adress: <span id="ip">Laddar...</span></p>
+        <p>Plats: <span id="location">Laddar...</span></p>
+        
+        <div id="map"></div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script>
+        fetch('https://ipwho.is/')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('ip').innerText = data.ip;
+                    document.getElementById('location').innerText = `${data.city}, ${data.country}`;
+
+                    const lat = data.latitude;
+                    const lon = data.longitude;
+
+                    const map = L.map('map').setView([lat, lon], 11);
+
+                    // Byt till Esri World Street Map (kräver ingen API-nyckel)
+                    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+                        maxZoom: 19,
+                        attribution: 'Tiles &copy; Esri'
+                    }).addTo(map);
+
+                    L.marker([lat, lon]).addTo(map)
+                        .bindPopup(`Här är du ungefär:<br><b>${data.city}</b>`)
+                        .openPopup();
+                } else {
+                    document.getElementById('ip').innerText = 'Kunde inte hämta';
+                    document.getElementById('location').innerText = 'Kunde inte hämta';
+                }
+            })
+            .catch(error => {
+                document.getElementById('ip').innerText = 'Kunde inte hämta';
+                document.getElementById('location').innerText = 'Kunde inte hämta';
+                console.error('Fel vid hämtning:', error);
+            });
+    </script>
+
+</body>
+</html>
